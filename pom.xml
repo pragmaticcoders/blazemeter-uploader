@@ -7,17 +7,23 @@
     <version>0.0.1</version>
     <packaging>maven-plugin</packaging>
 
-    <name>junit2jmeter converter Maven Plugin</name>
+    <name>junit2jmeter converter + Blazemeter uploader Maven Plugin</name>
+    <description>Plugin allows to generate a jMeter project from Junit tests and upload all artifacts to a Blazemeter project/test</description>
+    <url>pragmaticcoders.com</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <!-- FIXME change it to the project's website -->
-    <url>http://maven.apache.org</url>
-
 
     <dependencies>
         <dependency>
@@ -48,12 +54,6 @@
             <version>4.12</version>
             <scope>runtime</scope>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.projectlombok</groupId>-->
-            <!--<artifactId>lombok</artifactId>-->
-            <!--<version>1.16.16</version>-->
-            <!--<scope>provided</scope>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
