@@ -1,0 +1,193 @@
+package junit.converter.plugin;
+
+import com.google.common.collect.ImmutableList;
+import io.github.lukehutch.fastclasspathscanner.scanner.MethodInfo;
+import net.lingala.zip4j.core.ZipFile;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+@Mojo(name = "generate", requiresDependencyResolution = ResolutionScope.COMPILE)
+public class ProjectGenerationMojo extends AbstractMojo {
+    @Parameter(property = "package.to.scan", required = true)
+    private String packageToScan;
+
+    @Parameter(property = "jmeter", defaultValue = "3.2")
+    private String jmeterVersion;
+
+    @Parameter(property = "jmeter.home")
+    private String jmeterHome;
+
+    @Parameter(property = "jmeter.file", defaultValue = "jUnit2jMeter.jmx")
+    private String jmeterProjectFileName;
+
+    @Parameter(property = "include.annotation")
+    private Set<String> annotationToBeIncluded;
+
+    @Parameter(property = "exclude.annotation")
+    private Set<String> annotationToBeExcluded;
+
+    @Parameter(property = "jmeter.local.dist", defaultValue = "${project.build.directory}")
+    private String jmeterInstallation;
+
+    @Parameter(defaultValue = "${project.build.directory}")
+    private File target;
+
+    @Parameter(property = "api.key")
+    private String API_KEY;
+
+    @Parameter(property = "test.id")
+    private String TEST_ID;
+
+    @Parameter(property = "upload", defaultValue = "false")
+    private boolean uploadArtifacts;
+
+    @Component
+    private MavenProject project;
+    private Map<String, List<MethodInfo>> data = new HashMap<>();
+
+    private String jmeterDefaultVersion = "3.2";
+    private String jmeterDefaultInstallation = System.getProperty("user.dir") + File.separator + "target";
+    private String jmeterDefaultProjectFileName = "jUnit2jMeter.jmx";
+
+    @Override
+    public void execute() throws MojoExecutionException, MojoFailureException {
+        validateInput();
+        scanPackageAndCollectData();
+        initJmeterInfrastructure();
+        generateProjectFile();
+    }
+
+    private void generateProjectFile() {
+        try {
+            new TestPlanGenerator().generate(data, new File(jmeterInstallation), jmeterProjectFileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void scanPackageAndCollectData() throws MojoExecutionException {
+        Thread.currentThread().setContextClassLoader(getClassLoader());
+
+        data = new JunitScanner()
+                .setPackageToScan(packageToScan)
+                .setAnnotationToBeExcluded(annotationToBeExcluded)
+                .setAnnotationToBeIncluded(annotationToBeIncluded)
+                .collectData();
+    }
+
+    private ClassLoader getClassLoader() throws MojoExecutionException {
+        try {
+            List<String> classpathElements = project.getCompileClasspathElements();
+            classpathElements.add(project.getBuild().getOutputDirectory());
+            classpathElements.add(project.getBuild().getTestOutputDirectory());
+            URL urls[] = new URL[classpathElements.size()];
+
+            for (int i = 0; i < classpathElements.size(); ++i) {
+                urls[i] = new File((String) classpathElements.get(i)).toURI().toURL();
+            }
+            return new URLClassLoader(urls, getClass().getClassLoader());
+        } catch (Exception e)//gotta catch em all
+        {
+            throw new MojoExecutionException("Couldn't create a classloader.", e);
+        }
+    }
+
+    private void downloadJmeter() throws IOException {
+
+        URL website = new URL("https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-" + jmeterVersion + ".zip");
+        HttpURLConnection connection = null;
+        connection = (HttpURLConnection) website.openConnection();
+        connection.setRequestMethod("HEAD");
+        int code = connection.getResponseCode();
+        assert code == 200;
+
+        ReadableByteChannel rbc = Channels.newChannel(website.openStream());
+        getLog().info("Jmeter download started");
+        LocalTime startTime = LocalTime.now();
+        String jmeterLocation = jmeterInstallation + File.separator + "apache-jmeter-" + jmeterVersion + ".zip";
+        FileOutputStream fos = new FileOutputStream(jmeterLocation);
+        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+        LocalTime completeTime = LocalTime.now();
+        getLog().info("Jmeter download completed - " + jmeterLocation);
+        Duration between = Duration.between(startTime, completeTime);
+        getLog().info("Downloaded in : " + between.getSeconds() + " seconds");
+
+    }
+
+    private void unzip() throws net.lingala.zip4j.exception.ZipException {
+        String source = jmeterInstallation + File.separator + "apache-jmeter-" + jmeterVersion + ".zip";
+        String destination = new File(jmeterInstallation).getAbsolutePath();
+        ZipFile zipFile = new ZipFile(source);
+        zipFile.extractAll(destination);
+        getLog().info("Zip archive is successfully unpacked to :" + destination);
+        System.setProperty("jmeter.home", destination + "/apache-jmeter-" + jmeterVersion);
+    }
+
+    private void initJmeterInfrastructure() {
+        if (!data.isEmpty()) {
+            if (jmeterHome == null) {
+                try {
+                    downloadJmeter();
+                    unzip();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (net.lingala.zip4j.exception.ZipException e) {
+                    e.printStackTrace();
+                }
+            } else if (jmeterHome != null) {
+                System.setProperty("jmeter.home", jmeterHome);
+            }
+            getLog().info("JmeterHome is pointed to: " + System.getProperty("jmeter.home"));
+        } else {
+            getLog().info("There is no tests to be converted to jMeter project");
+        }
+    }
+
+    private void validateInput() {
+        // 1 - jmeter version
+        ImmutableList<String> availableVersions = ImmutableList.of("2.2", "2.6", "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "3.0", "3.1", "3.2");
+
+        if (!availableVersions.contains(jmeterVersion)) {
+            getLog().warn(jmeterVersion + " - version is not a valid one from list: " + availableVersions.toString());
+            getLog().warn("Default version \"" + jmeterDefaultVersion + "\" will bu used instead");
+            jmeterVersion = jmeterDefaultVersion;
+        }
+
+        // 2 - destination files
+        if (!Files.exists(new File(jmeterInstallation).toPath(), new LinkOption[]{LinkOption.NOFOLLOW_LINKS})) {
+            getLog().warn("Destination folder for Jmeter installation does not exists");
+            getLog().warn("Default folder \"" + jmeterDefaultInstallation + "\" will be use instead");
+            jmeterInstallation = jmeterDefaultInstallation;
+        }
+
+        // 3 - jmeter project file name
+        if (!Pattern.compile("^.{1,}\\.jmx$").matcher(jmeterProjectFileName).matches()) {
+            getLog().warn("\"" + jmeterProjectFileName + "\" is not a correct jmeter project file name");
+            getLog().warn("\"" + jmeterDefaultProjectFileName + "\" will be used instead");
+        }
+    }
+}

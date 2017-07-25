@@ -1,9 +1,8 @@
 package junit.converter.plugin;
 
+import org.apache.maven.plugin.logging.Log;
 import org.springframework.core.io.PathResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -26,11 +25,11 @@ public class FileUploader {
         return this;
     }
 
-    public void uploadFile(File fileToUpload) {
-        System.out.println("Uploading file: " + fileToUpload.getName());
+    public void uploadFile(File fileToUpload, Log log) {
+        log.info("Uploading file: " + fileToUpload.getName());
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<MultiValueMap<String, Object>>(prepareUploadRequest(fileToUpload), getHeaders());
-        String result = new RestTemplate().postForObject(getBlazemeterFilesUrl(), request, String.class);
-
+        ResponseEntity<String> uploadResponse = new RestTemplate().exchange(getBlazemeterFilesUrl(), HttpMethod.POST, request, String.class);
+        assert uploadResponse.getStatusCode().equals(HttpStatus.OK);
     }
 
     private HttpHeaders getHeaders() {
