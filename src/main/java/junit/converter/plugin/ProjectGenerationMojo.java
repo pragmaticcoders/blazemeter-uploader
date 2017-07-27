@@ -3,7 +3,9 @@ package junit.converter.plugin;
 import com.google.common.collect.ImmutableList;
 import io.github.lukehutch.fastclasspathscanner.scanner.MethodInfo;
 import net.lingala.zip4j.core.ZipFile;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Component;
@@ -29,6 +31,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
+import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 
 @Mojo(name = "generate", requiresDependencyResolution = ResolutionScope.COMPILE)
 public class ProjectGenerationMojo extends AbstractMojo {
@@ -73,8 +79,16 @@ public class ProjectGenerationMojo extends AbstractMojo {
     private String jmeterDefaultInstallation = System.getProperty("user.dir") + File.separator + "target";
     private String jmeterDefaultProjectFileName = "jUnit2jMeter.jmx";
 
+    @Component
+    private MavenProject mavenProject;
+    @Component
+    private MavenSession mavenSession;
+    @Component
+    private BuildPluginManager pluginManager;
+
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        compileSource();
         validateInput();
         scanPackageAndCollectData();
         initJmeterInfrastructure();
@@ -189,5 +203,77 @@ public class ProjectGenerationMojo extends AbstractMojo {
             getLog().warn("\"" + jmeterProjectFileName + "\" is not a correct jmeter project file name");
             getLog().warn("\"" + jmeterDefaultProjectFileName + "\" will be used instead");
         }
+    }
+
+    private void compileSource() throws MojoExecutionException {
+        executeMojo(
+                plugin(
+                        groupId("org.apache.maven.plugins"),
+                        artifactId("maven-compiler-plugin"),
+                        version("3.6.1")
+                ),
+                goal(goal("compile")),
+
+                configuration(
+                ),
+                executionEnvironment(
+                        mavenProject,
+                        mavenSession,
+                        pluginManager
+                )
+        );
+        executeMojo(
+                plugin(
+                        groupId("org.apache.maven.plugins"),
+                        artifactId("maven-compiler-plugin"),
+                        version("3.6.1")
+                ),
+                goal( goal("testCompile")),
+
+                configuration(
+                ),
+                executionEnvironment(
+                        mavenProject,
+                        mavenSession,
+                        pluginManager
+                )
+        );
+        executeMojo(
+                plugin(
+                        groupId("org.apache.maven.plugins"),
+                        artifactId("maven-assembly-plugin"),
+                        version("3.0.0")
+                ),
+
+                goal("single"),
+
+                configuration(
+
+                        element(name("descriptorRefs"),
+                                element(name("descriptorRef"), "jar-with-dependencies"))
+
+                ),
+                executionEnvironment(
+                        mavenProject,
+                        mavenSession,
+                        pluginManager
+                )
+        );
+        executeMojo(
+                plugin(
+                        groupId("org.apache.maven.plugins"),
+                        artifactId("maven-jar-plugin"),
+                        version("3.0.2")
+                ),
+                goal("test-jar"),
+
+                configuration(
+                ),
+                executionEnvironment(
+                        mavenProject,
+                        mavenSession,
+                        pluginManager
+                )
+        );
     }
 }
