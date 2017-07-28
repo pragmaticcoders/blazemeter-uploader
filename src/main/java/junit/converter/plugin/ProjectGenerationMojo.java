@@ -33,8 +33,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.configuration;
-import static org.twdata.maven.mojoexecutor.MojoExecutor.executionEnvironment;
 
 @Mojo(name = "generate", requiresDependencyResolution = ResolutionScope.COMPILE)
 public class ProjectGenerationMojo extends AbstractMojo {
@@ -71,6 +69,10 @@ public class ProjectGenerationMojo extends AbstractMojo {
     @Parameter(property = "upload", defaultValue = "false")
     private boolean uploadArtifacts;
 
+    @Parameter(property = "useEmbeddedJmeter", defaultValue = "false")
+    private boolean useEmbeddedJmeter;
+
+
     @Component
     private MavenProject project;
     private Map<String, List<MethodInfo>> data = new HashMap<>();
@@ -91,7 +93,11 @@ public class ProjectGenerationMojo extends AbstractMojo {
         compileSource();
         validateInput();
         scanPackageAndCollectData();
-        initJmeterInfrastructure();
+        if (useEmbeddedJmeter) {
+            createJmeterEmbededDist();
+        } else {
+            initJmeterInfrastructure();
+        }
         generateProjectFile();
     }
 
@@ -202,6 +208,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
         if (!Pattern.compile("^.{1,}\\.jmx$").matcher(jmeterProjectFileName).matches()) {
             getLog().warn("\"" + jmeterProjectFileName + "\" is not a correct jmeter project file name");
             getLog().warn("\"" + jmeterDefaultProjectFileName + "\" will be used instead");
+            jmeterProjectFileName = jmeterDefaultProjectFileName;
         }
     }
 
@@ -228,7 +235,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
                         artifactId("maven-compiler-plugin"),
                         version("3.6.1")
                 ),
-                goal( goal("testCompile")),
+                goal(goal("testCompile")),
 
                 configuration(
                 ),
@@ -276,4 +283,17 @@ public class ProjectGenerationMojo extends AbstractMojo {
                 )
         );
     }
+
+    private void createJmeterEmbededDist() {
+        String source = "/jmeter/" + jmeterVersion + "/bin/";
+        File destination = FileUtils.createDestinationFolder(target);
+
+        FileUtils.getFileList()
+                .stream()
+                .forEach(file -> FileUtils.copyFile(file, source, destination));
+
+        System.setProperty("jmeter.home", target + File.separator + FileUtils.EMBEDDED_JMETER_HOME);
+        getLog().info("JmeterHome is pointed to: " + System.getProperty("jmeter.home"));
+    }
+
 }

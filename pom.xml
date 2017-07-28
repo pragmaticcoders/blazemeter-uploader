@@ -4,7 +4,7 @@
 
     <groupId>com.pragmaticcoders</groupId>
     <artifactId>blazemeter-uploader-maven-plugin</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.1-Snapshot</version>
     <packaging>maven-plugin</packaging>
 
     <name>junit2jmeter converter + Blazemeter uploader Maven Plugin</name>
