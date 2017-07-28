@@ -8,11 +8,6 @@ import java.io.*;
 public class FileUtils {
     static final String EMBEDDED_JMETER_HOME = "jmeterHome";
 
-
-    static ImmutableList<String> getFileList() {
-        return ImmutableList.of("jmeter.properties", "reportgenerator.properties", "saveservice.properties", "system.properties", "upgrade.properties", "user.properties");
-    }
-
     static void copyFile(String file, String source, File destination) {
 
         InputStream resource = FileUtils.class.getResourceAsStream(source + file);
@@ -37,5 +32,17 @@ public class FileUtils {
         }
         targetJmeterFolder.mkdirs();
         return targetJmeterFolder;
+    }
+
+    static ImmutableList<String> getFileList() {
+        return ImmutableList.of
+                (
+                        "jmeter.properties",
+                        "reportgenerator.properties",
+                        "saveservice.properties",
+                        "system.properties",
+                        "upgrade.properties",
+                        "user.properties"
+                );
     }
 }

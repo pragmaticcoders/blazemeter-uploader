@@ -47,12 +47,7 @@ public class FileUploader {
         return uploadParameters;
     }
 
-    private static UriComponentsBuilder getUriBuilder() {
-        return UriComponentsBuilder.newInstance();
-    }
-
     private String getBlazemeterFilesUrl() {
-        UriComponentsBuilder builder = getUriBuilder().path(BLAZEMETER_URL);
         return UriComponentsBuilder.fromUriString(BLAZEMETER_URL).buildAndExpand(TEST_ID).toUriString();
     }
 }

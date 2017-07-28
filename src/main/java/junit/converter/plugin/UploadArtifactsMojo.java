@@ -19,18 +19,19 @@ package junit.converter.plugin;
 import io.github.lukehutch.fastclasspathscanner.scanner.MethodInfo;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Mojo(name = "upload", requiresDependencyResolution = ResolutionScope.COMPILE)
@@ -44,17 +45,6 @@ public class UploadArtifactsMojo
 
     @Parameter(defaultValue = "${project.build.directory}")
     private File target;
-
-    @Parameter(property = "generateOnly", defaultValue = "true")
-    private boolean generateOnly;
-
-    @Parameter(property = "uploadOnly", defaultValue = "false")
-    private boolean uploadOnly;
-
-    @Component
-    public MavenProject project;
-
-    private Map configuration;
 
     private Map<String, List<MethodInfo>> data = new HashMap<>();
 
