@@ -37,10 +37,10 @@ import java.util.stream.Collectors;
 @Mojo(name = "upload", requiresDependencyResolution = ResolutionScope.COMPILE)
 public class UploadArtifactsMojo
         extends AbstractMojo {
-    @Parameter(property = "api.key")
+    @Parameter(property = "api.key", required = true)
     private String API_KEY;
 
-    @Parameter(property = "test.id")
+    @Parameter(property = "test.id",required = true)
     private String TEST_ID;
 
     @Parameter(defaultValue = "${project.build.directory}")
@@ -66,6 +66,6 @@ public class UploadArtifactsMojo
         }
 
         FileUploader fileUploader = new FileUploader().apiKey(API_KEY).testId(TEST_ID);
-        filesToUpload.stream().forEach(path -> fileUploader.uploadFile(path.toFile(),getLog()));
+        filesToUpload.stream().forEach(path -> fileUploader.uploadFile(path.toFile(), getLog()));
     }
 }
