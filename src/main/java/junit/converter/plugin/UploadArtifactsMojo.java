@@ -24,15 +24,12 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import static junit.converter.plugin.FileUtils.getFilesListToUpload;
 
 @Mojo(name = "upload", requiresDependencyResolution = ResolutionScope.COMPILE)
 public class UploadArtifactsMojo
@@ -40,7 +37,7 @@ public class UploadArtifactsMojo
     @Parameter(property = "api.key", required = true)
     private String API_KEY;
 
-    @Parameter(property = "test.id",required = true)
+    @Parameter(property = "test.id", required = true)
     private String TEST_ID;
 
     @Parameter(defaultValue = "${project.build.directory}")
@@ -52,19 +49,7 @@ public class UploadArtifactsMojo
     @Override
     public void execute() throws MojoExecutionException {
 
-        List<Path> filesToUpload = new ArrayList<>();
-        try {
-            filesToUpload = Files.list(Paths.get(target.getPath()))
-                    .filter(Files::isRegularFile)
-                    .filter(path ->
-                            path.toString().endsWith("-jar-with-dependencies.jar") |
-                                    path.toString().endsWith("-tests.jar") |
-                                    path.toString().endsWith(".jmx")).
-                            collect(Collectors.toList());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        List<Path> filesToUpload = getFilesListToUpload(target);
         FileUploader fileUploader = new FileUploader().apiKey(API_KEY).testId(TEST_ID);
         filesToUpload.stream().forEach(path -> fileUploader.uploadFile(path.toFile(), getLog()));
     }
