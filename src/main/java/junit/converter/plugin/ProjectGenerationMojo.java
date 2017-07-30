@@ -188,7 +188,9 @@ public class ProjectGenerationMojo extends AbstractMojo {
     }
 
     private void validateInput() {
-        // 1 - jmeter version
+        // ----------------------------------------------------------------------
+        // jMeter version
+        // ----------------------------------------------------------------------
         ImmutableList<String> availableVersions = ImmutableList.of("2.2", "2.6", "2.7", "2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "3.0", "3.1", "3.2");
 
         if (!availableVersions.contains(jmeterVersion)) {
@@ -197,14 +199,20 @@ public class ProjectGenerationMojo extends AbstractMojo {
             jmeterVersion = jmeterDefaultVersion;
         }
 
-        // 2 - destination files
+
+        // ----------------------------------------------------------------------
+        // Destination file
+        // ----------------------------------------------------------------------
         if (!Files.exists(new File(jmeterInstallation).toPath(), new LinkOption[]{LinkOption.NOFOLLOW_LINKS})) {
             getLog().warn("Destination folder for Jmeter installation does not exists");
             getLog().warn("Default folder \"" + jmeterDefaultInstallation + "\" will be use instead");
             jmeterInstallation = jmeterDefaultInstallation;
         }
 
-        // 3 - jmeter project file name
+        // ----------------------------------------------------------------------
+        // jMeter project file name
+        // ----------------------------------------------------------------------
+
         if (!Pattern.compile("^.{1,}\\.jmx$").matcher(jmeterProjectFileName).matches()) {
             getLog().warn("\"" + jmeterProjectFileName + "\" is not a correct jmeter project file name");
             getLog().warn("\"" + jmeterDefaultProjectFileName + "\" will be used instead");
@@ -213,6 +221,10 @@ public class ProjectGenerationMojo extends AbstractMojo {
     }
 
     private void compileSource() throws MojoExecutionException {
+
+        // ----------------------------------------------------------------------
+        // Compile source
+        // ----------------------------------------------------------------------
         executeMojo(
                 plugin(
                         groupId("org.apache.maven.plugins"),
@@ -229,6 +241,10 @@ public class ProjectGenerationMojo extends AbstractMojo {
                         pluginManager
                 )
         );
+
+        // ----------------------------------------------------------------------
+        // Compile test source
+        // ----------------------------------------------------------------------
         executeMojo(
                 plugin(
                         groupId("org.apache.maven.plugins"),
@@ -245,6 +261,10 @@ public class ProjectGenerationMojo extends AbstractMojo {
                         pluginManager
                 )
         );
+
+        // ----------------------------------------------------------------------
+        // Generate a jar archive with all dependencies
+        // ----------------------------------------------------------------------
         executeMojo(
                 plugin(
                         groupId("org.apache.maven.plugins"),
@@ -266,6 +286,10 @@ public class ProjectGenerationMojo extends AbstractMojo {
                         pluginManager
                 )
         );
+
+        // ----------------------------------------------------------------------
+        // Generate jar archive for tests
+        // ----------------------------------------------------------------------
         executeMojo(
                 plugin(
                         groupId("org.apache.maven.plugins"),
