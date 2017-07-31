@@ -55,7 +55,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
     private Set<String> annotationToBeExcluded;
 
     @Parameter(property = "jmeter.local.dist", defaultValue = "${project.build.directory}")
-    private String jmeterInstallation;
+    private String jmeterLocalInstallation;
 
     @Parameter(defaultValue = "${project.build.directory}")
     private File target;
@@ -96,7 +96,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
 
     private void generateProjectFile() {
         try {
-            new TestPlanGenerator().generate(data, new File(jmeterInstallation), jmeterProjectFileName);
+            new TestPlanGenerator().generate(data, new File(jmeterLocalInstallation), jmeterProjectFileName);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -120,7 +120,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
             URL urls[] = new URL[classpathElements.size()];
 
             for (int i = 0; i < classpathElements.size(); ++i) {
-                urls[i] = new File((String) classpathElements.get(i)).toURI().toURL();
+                urls[i] = new File(classpathElements.get(i)).toURI().toURL();
             }
             return new URLClassLoader(urls, getClass().getClassLoader());
         } catch (Exception e)//gotta catch em all
@@ -132,7 +132,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
     private void downloadJmeter() throws IOException {
 
         URL website = new URL("https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-" + jmeterVersion + ".zip");
-        HttpURLConnection connection = null;
+        HttpURLConnection connection;
         connection = (HttpURLConnection) website.openConnection();
         connection.setRequestMethod("HEAD");
         int code = connection.getResponseCode();
@@ -141,7 +141,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
         ReadableByteChannel rbc = Channels.newChannel(website.openStream());
         getLog().info("Jmeter download started");
         LocalTime startTime = LocalTime.now();
-        String jmeterLocation = jmeterInstallation + File.separator + "apache-jmeter-" + jmeterVersion + ".zip";
+        String jmeterLocation = jmeterLocalInstallation + File.separator + "apache-jmeter-" + jmeterVersion + ".zip";
         FileOutputStream fos = new FileOutputStream(jmeterLocation);
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         LocalTime completeTime = LocalTime.now();
@@ -152,8 +152,8 @@ public class ProjectGenerationMojo extends AbstractMojo {
     }
 
     private void unzip() throws net.lingala.zip4j.exception.ZipException {
-        String source = jmeterInstallation + File.separator + "apache-jmeter-" + jmeterVersion + ".zip";
-        String destination = new File(jmeterInstallation).getAbsolutePath();
+        String source = jmeterLocalInstallation + File.separator + "apache-jmeter-" + jmeterVersion + ".zip";
+        String destination = new File(jmeterLocalInstallation).getAbsolutePath();
         ZipFile zipFile = new ZipFile(source);
         zipFile.extractAll(destination);
         getLog().info("Zip archive is successfully unpacked to :" + destination);
@@ -166,9 +166,9 @@ public class ProjectGenerationMojo extends AbstractMojo {
                 try {
                     downloadJmeter();
                     unzip();
-                } catch (IOException e) {
-                    e.printStackTrace();
                 } catch (net.lingala.zip4j.exception.ZipException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             } else if (jmeterHome != null) {
@@ -196,10 +196,10 @@ public class ProjectGenerationMojo extends AbstractMojo {
         // ----------------------------------------------------------------------
         // Destination file
         // ----------------------------------------------------------------------
-        if (!Files.exists(new File(jmeterInstallation).toPath(), new LinkOption[]{LinkOption.NOFOLLOW_LINKS})) {
+        if (!Files.exists(new File(jmeterLocalInstallation).toPath(), LinkOption.NOFOLLOW_LINKS)) {
             getLog().warn("Destination folder for Jmeter installation does not exists");
             getLog().warn("Default folder \"" + jmeterDefaultInstallation + "\" will be use instead");
-            jmeterInstallation = jmeterDefaultInstallation;
+            jmeterLocalInstallation = jmeterDefaultInstallation;
         }
 
         // ----------------------------------------------------------------------
@@ -306,7 +306,6 @@ public class ProjectGenerationMojo extends AbstractMojo {
         File destination = FileUtils.createDestinationFolder(target);
 
         FileUtils.getFileList()
-                .stream()
                 .forEach(file -> FileUtils.copyFile(file, source, destination));
 
         System.setProperty("jmeter.home", target + File.separator + FileUtils.EMBEDDED_JMETER_HOME);

@@ -47,9 +47,9 @@ mvn clean blazemeter-uploader:generate blazemeter-uploader:upload
 |`jmeterVersion`|`jmeter.version`|`3.2`|JMeter version to generate a project|
 |`jmeterHome`|`jmeter.home`|-|JMeter home installation folder|
 |`jmeterProjectFileName`|`jmeter.project`|`jUnit2jMeter.jmx`|JMeter project file name|
-|`annotationToBeIncluded`|`include.annotation`|`org.junit.Test`|Set of annotation(s) to filter tests which will be included in the project|
-|`annotationToBeExcluded`|`exclude.annotation`|`org.junit.Ignore`|Set of annotation(s) to filter tests which will be excluded from the project|
-|`jmeterInstallation`|`jmeter.local.dist`|`${project.build.directory}`|JMeter local installation(used to specify the JMeter download location)|
+|`annotationToBeIncluded`|`include.annotation`|`org.junit.Test`|A comma separated list of annotations to filter tests which will be included in the project|
+|`annotationToBeExcluded`|`exclude.annotation`|`org.junit.Ignore`|A comma separated list of of annotations to filter tests which will be excluded from the project|
+|`jmeterLocalInstallation`|`jmeter.local.dist`|`${project.build.directory}`|JMeter local installation(used to specify the JMeter download location)|
 |`useEmbeddedJmeter`|`useEmbeddedJmeter`|`false`|Use embedded JMeter properties to generate project file, no download or local installation required|
 |`API_KEY`|`api.key`|`required`|Api-key to access BlazeMeter account|
 |`TEST_ID`|`test.id`|`required`|ID for the test to upload artifacts|
