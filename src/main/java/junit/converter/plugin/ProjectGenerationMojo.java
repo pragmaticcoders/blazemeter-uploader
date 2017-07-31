@@ -39,13 +39,13 @@ public class ProjectGenerationMojo extends AbstractMojo {
     @Parameter(property = "package.to.scan", required = true)
     private String packageToScan;
 
-    @Parameter(property = "jmeter", defaultValue = "3.2")
+    @Parameter(property = "jmeter.version", defaultValue = "3.2")
     private String jmeterVersion;
 
     @Parameter(property = "jmeter.home")
     private String jmeterHome;
 
-    @Parameter(property = "jmeter.file", defaultValue = "jUnit2jMeter.jmx")
+    @Parameter(property = "jmeter.project", defaultValue = "jUnit2jMeter.jmx")
     private String jmeterProjectFileName;
 
     @Parameter(property = "include.annotation")
@@ -60,18 +60,8 @@ public class ProjectGenerationMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.build.directory}")
     private File target;
 
-    @Parameter(property = "api.key")
-    private String API_KEY;
-
-    @Parameter(property = "test.id")
-    private String TEST_ID;
-
-    @Parameter(property = "upload", defaultValue = "false")
-    private boolean uploadArtifacts;
-
     @Parameter(property = "useEmbeddedJmeter", defaultValue = "false")
     private boolean useEmbeddedJmeter;
-
 
     @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject project;

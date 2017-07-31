@@ -32,8 +32,7 @@ import java.util.Map;
 import static junit.converter.plugin.FileUtils.getFilesListToUpload;
 
 @Mojo(name = "upload", requiresDependencyResolution = ResolutionScope.COMPILE)
-public class UploadArtifactsMojo
-        extends AbstractMojo {
+public class UploadArtifactsMojo extends AbstractMojo {
     @Parameter(property = "api.key", required = true)
     private String API_KEY;
 
