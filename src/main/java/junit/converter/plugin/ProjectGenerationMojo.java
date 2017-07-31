@@ -73,7 +73,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
     private boolean useEmbeddedJmeter;
 
 
-    @Component
+    @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject project;
     private Map<String, List<MethodInfo>> data = new HashMap<>();
 
@@ -81,12 +81,15 @@ public class ProjectGenerationMojo extends AbstractMojo {
     private String jmeterDefaultInstallation = System.getProperty("user.dir") + File.separator + "target";
     private String jmeterDefaultProjectFileName = "jUnit2jMeter.jmx";
 
-    @Component
+    @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject mavenProject;
-    @Component
+    @Parameter(defaultValue = "${session}", readonly = true)
     private MavenSession mavenSession;
     @Component
     private BuildPluginManager pluginManager;
+
+    public ProjectGenerationMojo() {
+    }
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
