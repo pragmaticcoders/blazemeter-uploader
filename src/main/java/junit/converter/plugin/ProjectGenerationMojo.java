@@ -87,7 +87,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
         validateInput();
         scanPackageAndCollectData();
         if (useEmbeddedJmeter) {
-            createJmeterEmbededDist();
+            createJmeterEmbeddedDist();
         } else {
             initJmeterInfrastructure();
         }
@@ -191,7 +191,6 @@ public class ProjectGenerationMojo extends AbstractMojo {
             getLog().warn("Default version \"" + jmeterDefaultVersion + "\" will bu used instead");
             jmeterVersion = jmeterDefaultVersion;
         }
-
 
         // ----------------------------------------------------------------------
         // Destination file
@@ -301,7 +300,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
         );
     }
 
-    private void createJmeterEmbededDist() {
+    private void createJmeterEmbeddedDist() {
         String source = "/jmeter/" + jmeterVersion + "/bin/";
         File destination = FileUtils.createDestinationFolder(target);
 
@@ -311,5 +310,4 @@ public class ProjectGenerationMojo extends AbstractMojo {
         System.setProperty("jmeter.home", target + File.separator + FileUtils.EMBEDDED_JMETER_HOME);
         getLog().info("JmeterHome is pointed to: " + System.getProperty("jmeter.home"));
     }
-
 }
