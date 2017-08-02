@@ -39,7 +39,6 @@ or
 mvn clean blazemeter-uploader:generate blazemeter-uploader:upload
 ```
 ### General Configuration parameters
-- `packageToScan` - package name to look for tests (`required`)
 
 | Parameter | System property | Default value / required| Description |
 | ------ | ------ | ------ | ------ |

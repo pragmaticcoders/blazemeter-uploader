@@ -83,7 +83,7 @@ public class ProjectGenerationMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        compileSource();
+        prepareSource();
         validateInput();
         scanPackageAndCollectData();
         if (useEmbeddedJmeter) {
@@ -212,11 +212,30 @@ public class ProjectGenerationMojo extends AbstractMojo {
         }
     }
 
+    private void prepareSource() throws MojoExecutionException {
+        compileSource();
+        compileTestSource();
+        generateDependencyJar();
+        generateTestJar();
+
+    }
+
+    private void createJmeterEmbeddedDist() {
+        String source = "/jmeter/" + jmeterVersion + "/bin/";
+        File destination = FileUtils.createDestinationFolder(target);
+
+        FileUtils.getFileList()
+                .forEach(file -> FileUtils.copyFile(file, source, destination));
+
+        System.setProperty("jmeter.home", target + File.separator + FileUtils.EMBEDDED_JMETER_HOME);
+        getLog().info("JmeterHome is pointed to: " + System.getProperty("jmeter.home"));
+    }
+
+    // ----------------------------------------------------------------------
+    // Compile source
+    // ----------------------------------------------------------------------
     private void compileSource() throws MojoExecutionException {
 
-        // ----------------------------------------------------------------------
-        // Compile source
-        // ----------------------------------------------------------------------
         executeMojo(
                 plugin(
                         groupId("org.apache.maven.plugins"),
@@ -233,10 +252,11 @@ public class ProjectGenerationMojo extends AbstractMojo {
                         pluginManager
                 )
         );
-
-        // ----------------------------------------------------------------------
-        // Compile test source
-        // ----------------------------------------------------------------------
+    }
+    // ----------------------------------------------------------------------
+    // Compile test source
+    // ----------------------------------------------------------------------
+    private void compileTestSource() throws MojoExecutionException {
         executeMojo(
                 plugin(
                         groupId("org.apache.maven.plugins"),
@@ -253,10 +273,11 @@ public class ProjectGenerationMojo extends AbstractMojo {
                         pluginManager
                 )
         );
-
-        // ----------------------------------------------------------------------
-        // Generate a jar archive with all dependencies
-        // ----------------------------------------------------------------------
+    }
+    // ----------------------------------------------------------------------
+    // Generate a jar archive with all dependencies
+    // ----------------------------------------------------------------------
+    private void generateDependencyJar() throws MojoExecutionException {
         executeMojo(
                 plugin(
                         groupId("org.apache.maven.plugins"),
@@ -278,10 +299,11 @@ public class ProjectGenerationMojo extends AbstractMojo {
                         pluginManager
                 )
         );
-
-        // ----------------------------------------------------------------------
-        // Generate jar archive for tests
-        // ----------------------------------------------------------------------
+    }
+    // ----------------------------------------------------------------------
+    // Generate jar archive for tests
+    // ----------------------------------------------------------------------
+    private void generateTestJar() throws MojoExecutionException {
         executeMojo(
                 plugin(
                         groupId("org.apache.maven.plugins"),
@@ -298,16 +320,5 @@ public class ProjectGenerationMojo extends AbstractMojo {
                         pluginManager
                 )
         );
-    }
-
-    private void createJmeterEmbeddedDist() {
-        String source = "/jmeter/" + jmeterVersion + "/bin/";
-        File destination = FileUtils.createDestinationFolder(target);
-
-        FileUtils.getFileList()
-                .forEach(file -> FileUtils.copyFile(file, source, destination));
-
-        System.setProperty("jmeter.home", target + File.separator + FileUtils.EMBEDDED_JMETER_HOME);
-        getLog().info("JmeterHome is pointed to: " + System.getProperty("jmeter.home"));
     }
 }
